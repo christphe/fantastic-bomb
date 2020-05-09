@@ -5,15 +5,8 @@ import os
 import pygame
 import stage
 import bomb
-
-DIR_UP = 0
-DIR_DOWN = 1
-DIR_LEFT = 2
-DIR_RIGHT = 3
-
-COLOUR_WHITE = 0
-COLOUR_BLACK = 1
-COLOUR_BLUE = 2
+import config
+import assets
 
 player_rects = [
     [
@@ -34,12 +27,6 @@ player_rects = [
     ]
 ]
 
-EVT_UP = 0
-EVT_DOWN = 1
-EVT_LEFT = 2
-EVT_RIGHT = 3
-EVT_BOMB = 4
-
 
 def init_events():
     """ init events """
@@ -49,11 +36,9 @@ def init_events():
 def main():
     """ main function """
     pygame.init()
-    screen_res = (1280, 1024)
-    fake_screen_res = (320, 240)
     screen = pygame.display.set_mode(
-        screen_res, pygame.HWSURFACE | pygame.DOUBLEBUF)
-    fake_screen = pygame.Surface(fake_screen_res)
+        config.screen_res, pygame.HWSURFACE | pygame.DOUBLEBUF)
+    fake_screen = pygame.Surface(config.fake_screen_res)
 
     icon = pygame.image.load(os.path.join("assets", "icon.png"))
     pygame.display.set_icon(icon)
@@ -61,28 +46,20 @@ def main():
     pygame.display.set_caption("Fantatstic Bomb")
     running = True
 
-    character_spritesheet = pygame.image.load(
-        os.path.join("assets", "character-spritesheet.png"))
-    character_spritesheet.set_colorkey((64, 144, 56))
-    tiles = pygame.image.load(
-        os.path.join("assets", "world-tiles.png"))
-    background = pygame.image.load(
-        os.path.join("assets", "background.png"))
-    background = pygame.transform.scale(background, fake_screen_res)
+    assets.data.load()
+
     player_position = (1, 1)
-    direction = DIR_RIGHT
-    step = 16
+    direction = config.DIR_RIGHT
 
     current_stage = stage.stage1
-    rects = player_rects[COLOUR_WHITE]
+    rects = player_rects[config.COLOUR_WHITE]
 
     stage_size = (len(current_stage[0]) *
-                  step, len(current_stage) * step)
-    offset = ((fake_screen_res[0] - stage_size[0]) // 2,
-              (fake_screen_res[1] - stage_size[1]) // 2)
-    bomb_position = None
-    bomb_dropped = 0
-    bomb_cooldown = 3000
+                  config.STEP, len(current_stage) * config.STEP)
+    offset = ((config.fake_screen_res[0] - stage_size[0]) // 2,
+              (config.fake_screen_res[1] - stage_size[1]) // 2)
+    bombs = []
+    max_bombs = 2
 
     move_cooldown = 200
     move_time = 0
@@ -100,33 +77,33 @@ def main():
         for joy in joysticks:
             axis_x, axis_y = (joy.get_axis(0), joy.get_axis(1))
             if axis_x > 0.2:
-                events[EVT_RIGHT] = True
+                events[config.EVT_RIGHT] = True
             elif axis_y > 0.2:
-                events[EVT_DOWN] = True
+                events[config.EVT_DOWN] = True
             elif axis_x < -0.2:
-                events[EVT_LEFT] = True
+                events[config.EVT_LEFT] = True
             elif axis_y < -0.2:
-                events[EVT_UP] = True
+                events[config.EVT_UP] = True
         keys = pygame.key.get_pressed()
         if keys[pygame.K_UP]:
-            events[EVT_UP] = True
+            events[config.EVT_UP] = True
         elif keys[pygame.K_DOWN]:
-            events[EVT_DOWN] = True
+            events[config.EVT_DOWN] = True
         elif keys[pygame.K_LEFT]:
-            events[EVT_LEFT] = True
+            events[config.EVT_LEFT] = True
         elif keys[pygame.K_RIGHT]:
-            events[EVT_RIGHT] = True
+            events[config.EVT_RIGHT] = True
 
         for event in pygame.event.get():
             # only do something if the event is of type QUIT
             if event.type == pygame.QUIT:
                 # change the value to False, to exit the main loop
                 running = False
-            elif event.type == pygame.JOYBUTTONDOWN and bomb_position is None:
-                events[EVT_BOMB] = True
+            elif event.type == pygame.JOYBUTTONDOWN:
+                events[config.EVT_BOMB] = True
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE and bomb_position is None:
-                    events[EVT_BOMB] = True
+                if event.key == pygame.K_SPACE:
+                    events[config.EVT_BOMB] = True
                 if event.key == pygame.K_F1:
                     rects = player_rects[0]
                 if event.key == pygame.K_F2:
@@ -137,41 +114,39 @@ def main():
                     running = False
 
         can_move = ((move_time + move_cooldown) < pygame.time.get_ticks())
-        if events[EVT_UP] and can_move:
+        if events[config.EVT_UP] and can_move:
             player_position = (
                 player_position[0], player_position[1] - 1)
-            direction = DIR_UP
-        elif events[EVT_DOWN] and can_move:
+            direction = config.DIR_UP
+        elif events[config.EVT_DOWN] and can_move:
             player_position = (
                 player_position[0], player_position[1] + 1)
-            direction = DIR_DOWN
-        elif events[EVT_LEFT] and can_move:
+            direction = config.DIR_DOWN
+        elif events[config.EVT_LEFT] and can_move:
             player_position = (
                 player_position[0] - 1, player_position[1])
-            direction = DIR_LEFT
-        elif events[EVT_RIGHT] and can_move:
+            direction = config.DIR_LEFT
+        elif events[config.EVT_RIGHT] and can_move:
             player_position = (
                 player_position[0] + 1, player_position[1])
-            direction = DIR_RIGHT
+            direction = config.DIR_RIGHT
 
         if (player_position[1] >= len(current_stage) or player_position[1] < 0) or (player_position[0] >= len(current_stage[0]) or player_position[0] < 0) or (stage.get_tile(current_stage, player_position) != " "):
             player_position = old_position
         elif can_move:
             move_time = pygame.time.get_ticks()
 
-        if events[EVT_BOMB] and bomb_position is None:
-            bomb_position = player_position
-            bomb.drop(current_stage, player_position)
-            bomb_dropped = pygame.time.get_ticks()
+        if events[config.EVT_BOMB] and len(bombs) < max_bombs:
+            bombs.append(bomb.drop(current_stage, player_position))
 
-        if bomb_position is not None and bomb_dropped + bomb_cooldown < pygame.time.get_ticks():
-            player_dead = bomb.explode(
-                current_stage, bomb_position, player_position)
-            bomb_position = None
-            if player_dead:
-                player_position = (1, 1)
+        for item in bombs:
+            if (item.explosion_time < pygame.time.get_ticks()):
+                player_dead = item.explode(current_stage, player_position)
+                bombs.remove(item)
+                if player_dead:
+                    player_position = (1, 1)
 
-        fake_screen.blit(background, (0, 0))
+        fake_screen.blit(assets.data.background, (0, 0))
         line_number = 0
         for line in current_stage:
             col_number = 0
@@ -183,18 +158,20 @@ def main():
                 elif block == '█':
                     tile = (294, 461)
                 fake_screen.blit(
-                    tiles,
-                    (offset[0] + col_number * step,
-                     offset[1] + line_number * step),
-                    (tile[0], tile[1], step, step))
+                    assets.data.tiles,
+                    (offset[0] + col_number * config.STEP,
+                     offset[1] + line_number * config.STEP),
+                    (tile[0], tile[1], config.STEP, config.STEP))
                 col_number += 1
             line_number += 1
 
-        bomb.draw(offset, step, tiles, fake_screen, bomb_position)
-        fake_screen.blit(character_spritesheet,
-                         (offset[0] + (player_position[0] * step), offset[1] + (player_position[1] * step) - 10), rects[direction])
+        for item in bombs:
+            item.draw(offset, fake_screen)
+        fake_screen.blit(assets.data.character_spritesheet,
+                         (offset[0] + (player_position[0] * config.STEP), offset[1] + (player_position[1] * config.STEP) - 10), rects[direction])
 
-        screen.blit(pygame.transform.scale(fake_screen, screen_res), (0, 0))
+        screen.blit(pygame.transform.scale(
+            fake_screen, config.screen_res), (0, 0))
         pygame.display.flip()
 
 
