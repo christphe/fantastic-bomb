@@ -25,7 +25,7 @@ class Bomb:
 
     def stop_explosion(self, current_stage, position):
         """ check if bomb explosion has to stop """
-        tile = stage.get_tile(current_stage, position) 
+        tile = stage.get_tile(current_stage, position)
         if tile != " ":
             return True
         return False
@@ -35,7 +35,6 @@ class Bomb:
         player_dead = False
         explosions = [self.position]
         for i in range(1, self.power + 1):
-            print(i)
             position = (self.position[0], self.position[1] + i)
             explosions.append(position)
             if self.stop_explosion(current_stage, position):
@@ -63,8 +62,10 @@ class Bomb:
 
     def draw(self, offset, dest):
         """ draw bomb """
-        dest.blit(assets.data.tiles, (offset[0] + (
-            self.position[0] * config.STEP), offset[1] + (self.position[1] * config.STEP)), rects_bomb[0])
+        dest.blit(assets.data.tiles, (
+            offset[0] + (self.position[0] * config.STEP),
+            offset[1] + (self.position[1] * config.STEP)
+        ), rects_bomb[0])
 
 
 def drop(current_stage, position):

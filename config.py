@@ -3,7 +3,6 @@ screen_res = (1280, 1024)
 fake_screen_res = (320, 240)
 STEP = 16
 
-
 DIR_UP = 0
 DIR_DOWN = 1
 DIR_LEFT = 2
@@ -18,4 +17,3 @@ EVT_DOWN = 1
 EVT_LEFT = 2
 EVT_RIGHT = 3
 EVT_BOMB = 4
-
