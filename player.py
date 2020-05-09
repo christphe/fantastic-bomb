@@ -100,5 +100,10 @@ class Player:
         """ check if can move """
         return (self.move_time + MOVE_COOLDOWN) < pygame.time.get_ticks()
 
-    def drop_bomb(self):
+    def on_bomb_dropped(self):
+        """ dop bomb """
         self.bombs += 1
+
+    def on_bomb_exploded(self):
+        """ dop bomb """
+        self.bombs -= 1

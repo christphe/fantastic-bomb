@@ -17,6 +17,7 @@ class Bomb:
     position = None
     explosion_time = 0
     power = 0
+    owner = None
 
     def __init__(self, position, power=1):
         self.position = position

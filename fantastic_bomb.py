@@ -32,7 +32,6 @@ def main():
     offset = ((config.fake_screen_res[0] - stage_size[0]) // 2,
               (config.fake_screen_res[1] - stage_size[1]) // 2)
     bombs = []
-    max_bombs = 2
 
     joysticks = [pygame.joystick.Joystick(
         i) for i in range(pygame.joystick.get_count())]
@@ -83,15 +82,20 @@ def main():
                     current_player.move_time = pygame.time.get_ticks()
 
             if (events[config.EVT_BOMB]
-                    and len(bombs) < max_bombs
+                    and current_player.bombs < current_player.max_bombs
                     and stage.get_tile(current_stage, current_player.position) == ' '):
-                bombs.append(bomb.drop(current_stage, current_player.position))
+                new_bomb = bomb.drop(current_stage, current_player.position)
+                new_bomb.owner = current_player
+                bombs.append(new_bomb)
+                current_player.on_bomb_dropped()
 
         for current_bomb in bombs:
             if current_bomb.explosion_time < pygame.time.get_ticks():
                 # player_dead = current_bomb.explode(current_stage, current_bomb.position)
                 current_bomb.explode(current_stage, current_bomb.position)
                 bombs.remove(current_bomb)
+                if current_bomb.owner:
+                    current_bomb.owner.on_bomb_exploded()
                 # if player_dead:
                 #     current_bomb.position = (1, 1)
 
