@@ -76,8 +76,10 @@ class Player:
         events = init_events()
 
         if self.joystick:
-            self.read_axis(events, (self.joystick.get_axis(0), self.joystick.get_axis(1)))
-            self.read_axis(events, self.joystick.get_hat(0))
+            if self.joystick.get_numaxes() > 0:
+                self.read_axis(events, (self.joystick.get_axis(0), self.joystick.get_axis(1)))
+            if self.joystick.get_numhats() > 0:
+                self.read_axis(events, self.joystick.get_hat(0))
 
             if self.joystick.get_button(0):
                 events[config.EVT_BOMB] = True

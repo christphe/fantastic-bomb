@@ -33,15 +33,21 @@ def main():
               (config.fake_screen_res[1] - stage_size[1]) // 2)
     bombs = []
 
-    joysticks = [pygame.joystick.Joystick(
-        i) for i in range(pygame.joystick.get_count())]
+    joysticks = []
+    for i in range(pygame.joystick.get_count()):
+        joysticks.append(pygame.joystick.Joystick(i))
     players = []
-    players.append(player.Player((1, 1)))
-    players[0].position = (13, 11)
-    players[0].colour = config.COLOUR_BLACK
-    for joy in joysticks:
+    for i in range(len(joysticks)):
+        joy = joysticks[i]
         joy.init()
-        players.append(player.Player((1, 1), joy))
+        pl = player.Player(config.start_positions[i], joy)
+        pl.colour = i
+        players.append(pl)
+
+    if (len(joysticks) == 1):
+        pl = player.Player(config.start_positions[1])
+        pl.colour = 1
+        players.append(pl)
 
     # main loop
     while running:
@@ -92,7 +98,7 @@ def main():
         for current_bomb in bombs:
             if current_bomb.explosion_time < pygame.time.get_ticks():
                 # player_dead = current_bomb.explode(current_stage, current_bomb.position)
-                current_bomb.explode(current_stage, current_bomb.position)
+                current_bomb.explode(current_stage, players)
                 bombs.remove(current_bomb)
                 if current_bomb.owner:
                     current_bomb.owner.on_bomb_exploded()

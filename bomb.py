@@ -31,9 +31,8 @@ class Bomb:
             return True
         return False
 
-    def explode(self, current_stage, player_position):
+    def explode(self, current_stage, players):
         """ explode bomb """
-        player_dead = False
         explosions = [self.position]
         for i in range(1, self.power + 1):
             position = (self.position[0], self.position[1] + i)
@@ -56,10 +55,10 @@ class Bomb:
             if self.stop_explosion(current_stage, position):
                 break
         for exp in explosions:
-            if player_position == exp:
-                player_dead = True
+            for p in players:
+                if p.position == exp:
+                    p.die()
             stage.destroy_block(current_stage, exp)
-        return player_dead
 
     def draw(self, offset, dest):
         """ draw bomb """
