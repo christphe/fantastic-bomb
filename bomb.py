@@ -49,22 +49,30 @@ class Bomb:
         self.explosions = [self.position]
         for i in range(1, self.power + 1):
             position = (self.position[0], self.position[1] + i)
-            self.explosions.append(position)
+            tile = stage.get_tile(current_stage, position)
+            if tile != '█':
+                self.explosions.append(position)
             if self.stop_explosion(current_stage, position):
                 break
         for i in range(1, self.power + 1):
             position = (self.position[0], self.position[1] - i)
-            self.explosions.append(position)
+            tile = stage.get_tile(current_stage, position)
+            if tile != '█':
+                self.explosions.append(position)
             if self.stop_explosion(current_stage, position):
                 break
         for i in range(1, self.power + 1):
             position = (self.position[0] + i, self.position[1])
-            self.explosions.append(position)
+            tile = stage.get_tile(current_stage, position)
+            if tile != '█':
+                self.explosions.append(position)
             if self.stop_explosion(current_stage, position):
                 break
         for i in range(1, self.power + 1):
             position = (self.position[0] - i, self.position[1])
-            self.explosions.append(position)
+            tile = stage.get_tile(current_stage, position)
+            if tile != '█':
+                self.explosions.append(position)
             if self.stop_explosion(current_stage, position):
                 break
         for exp in self.explosions:
