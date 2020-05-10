@@ -44,9 +44,9 @@ def main():
         pl.colour = i
         players.append(pl)
 
-    if (len(joysticks) == 1):
-        pl = player.Player(config.start_positions[1])
-        pl.colour = 1
+    if (len(joysticks) < 4):
+        pl = player.Player(config.start_positions[len(joysticks)])
+        pl.colour = len(joysticks)
         players.append(pl)
 
     # main loop
