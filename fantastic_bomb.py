@@ -96,14 +96,13 @@ def main():
                 current_player.on_bomb_dropped()
 
         for current_bomb in bombs:
-            if current_bomb.explosion_time < pygame.time.get_ticks():
-                # player_dead = current_bomb.explode(current_stage, current_bomb.position)
-                current_bomb.explode(current_stage, players)
+            if (current_bomb.exploding is not None
+                    and current_bomb.exploding < pygame.time.get_ticks()):
                 bombs.remove(current_bomb)
-                if current_bomb.owner:
-                    current_bomb.owner.on_bomb_exploded()
-                # if player_dead:
-                #     current_bomb.position = (1, 1)
+
+        for current_bomb in bombs:
+            if current_bomb.explosion_time < pygame.time.get_ticks():
+                current_bomb.explode(current_stage, players, bombs)
 
         fake_screen.blit(assets.data.background, (0, 0))
         line_number = 0
