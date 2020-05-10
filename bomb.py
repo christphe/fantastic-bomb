@@ -12,7 +12,7 @@ rects_bomb = [
 rects_explosion = [
     [345, 512, 16, 16]
 ]
-EXPLOSION_DURATION = 1000
+EXPLOSION_DURATION = 200
 
 class Bomb:
     """ Bomb """
