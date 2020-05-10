@@ -61,33 +61,10 @@ def main():
                     running = False
 
         for current_player in players:
-            events = current_player.get_events()
-            old_position = current_player.position
-            # event handling, gets all event from the event queue
-            if current_player.can_move():
-                if events[config.EVT_UP]:
-                    current_player.position = (
-                        current_player.position[0], current_player.position[1] - 1)
-                    current_player.direction = config.DIR_UP
-                elif events[config.EVT_DOWN]:
-                    current_player.position = (
-                        current_player.position[0], current_player.position[1] + 1)
-                    current_player.direction = config.DIR_DOWN
-                elif events[config.EVT_LEFT]:
-                    current_player.position = (
-                        current_player.position[0] - 1, current_player.position[1])
-                    current_player.direction = config.DIR_LEFT
-                elif events[config.EVT_RIGHT]:
-                    current_player.position = (
-                        current_player.position[0] + 1, current_player.position[1])
-                    current_player.direction = config.DIR_RIGHT
 
-                if stage.get_tile(current_stage, current_player.position) != " ":
-                    current_player.position = old_position
-                else:
-                    current_player.move_time = pygame.time.get_ticks()
+            current_player.move(current_stage)
 
-            if (events[config.EVT_BOMB]
+            if (current_player.events[config.EVT_BOMB]
                     and current_player.bombs < current_player.max_bombs
                     and stage.get_tile(current_stage, current_player.position) == ' '):
                 new_bomb = bomb.drop(current_stage, current_player.position)

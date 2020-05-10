@@ -3,6 +3,7 @@
 import pygame
 import config
 import assets
+import stage
 
 player_rects = [
     [
@@ -23,7 +24,7 @@ player_rects = [
     ]
 ]
 
-MOVE_COOLDOWN = 200
+SPEED = 0.01
 
 
 def init_events():
@@ -42,65 +43,97 @@ class Player:
     move_time = 0
     bombs = 0
     max_bombs = 2
+    pixel_position = None
+    events = []
 
     def __init__(self, position, joystick=None):
         self.position = position
+        self.pixel_position = position * config.STEP
         self.start_position = position
         self.joystick = joystick
 
     def die(self):
         """ die """
         self.position = self.start_position
+        self.pixel_position = self.start_position
 
     def draw(self, offset, dest):
         """ draw bomb """
         dest.blit(assets.data.character_spritesheet, (
-            offset[0] + (self.position[0] * config.STEP),
-            offset[1] + (self.position[1] * config.STEP) - 10
+            offset[0] + (self.pixel_position[0] * config.STEP),
+            offset[1] + (self.pixel_position[1] * config.STEP) - 10
         ), player_rects[self.colour][self.direction])
 
-    def read_axis(self, events, axis):
+    def read_axis(self, axis):
         """ read axis and store events """
         axis_x, axis_y = axis
         if axis_x > 0.2:
-            events[config.EVT_RIGHT] = True
+            self.events[config.EVT_RIGHT] = True
         elif axis_y > 0.2:
-            events[config.EVT_DOWN] = True
+            self.events[config.EVT_DOWN] = True
         elif axis_x < -0.2:
-            events[config.EVT_LEFT] = True
+            self.events[config.EVT_LEFT] = True
         elif axis_y < -0.2:
-            events[config.EVT_UP] = True
+            self.events[config.EVT_UP] = True
 
     def get_events(self):
         """ get input events """
-        events = init_events()
+        self.events = init_events()
 
         if self.joystick:
             if self.joystick.get_numaxes() > 0:
-                self.read_axis(events, (self.joystick.get_axis(0), self.joystick.get_axis(1)))
+                self.read_axis((self.joystick.get_axis(0),
+                                self.joystick.get_axis(1)))
             if self.joystick.get_numhats() > 0:
-                self.read_axis(events, self.joystick.get_hat(0))
+                self.read_axis(self.joystick.get_hat(0))
 
             if self.joystick.get_button(0):
-                events[config.EVT_BOMB] = True
+                self.events[config.EVT_BOMB] = True
         else:
             keys = pygame.key.get_pressed()
             if keys[pygame.K_UP]:
-                events[config.EVT_UP] = True
+                self.events[config.EVT_UP] = True
             elif keys[pygame.K_DOWN]:
-                events[config.EVT_DOWN] = True
+                self.events[config.EVT_DOWN] = True
             elif keys[pygame.K_LEFT]:
-                events[config.EVT_LEFT] = True
+                self.events[config.EVT_LEFT] = True
             elif keys[pygame.K_RIGHT]:
-                events[config.EVT_RIGHT] = True
+                self.events[config.EVT_RIGHT] = True
             elif keys[pygame.K_SPACE]:
-                events[config.EVT_BOMB] = True
+                self.events[config.EVT_BOMB] = True
 
-        return events
+    def move(self, current_stage):
+        """ move """
+        if self.move_time is None:
+            self.move_time = pygame.time.get_ticks()
+        self.get_events()
+        destination = None
+        if self.events[config.EVT_UP]:
+            destination = (
+                self.position[0], self.position[1] - 1)
+            self.direction = config.DIR_UP
+        elif self.events[config.EVT_DOWN]:
+            destination = (
+                self.position[0], self.position[1] + 1)
+            self.direction = config.DIR_DOWN
+        elif self.events[config.EVT_LEFT]:
+            destination = (
+                self.position[0] - 1, self.position[1])
+            self.direction = config.DIR_LEFT
+        elif self.events[config.EVT_RIGHT]:
+            destination = (
+                self.position[0] + 1, self.position[1])
+            self.direction = config.DIR_RIGHT
 
-    def can_move(self):
-        """ check if can move """
-        return (self.move_time + MOVE_COOLDOWN) < pygame.time.get_ticks()
+        if destination is not None:
+            if stage.get_tile(current_stage, destination) != " ":
+                destination = self.position
+            time = pygame.time.get_ticks() - self.move_time
+            self.pixel_position = (self.pixel_position[0] + ((destination[0] - self.pixel_position[0]) * SPEED * time),
+                                    self.pixel_position[1] + ((destination[1] - self.pixel_position[1]) * SPEED * time))
+
+        self.position = (round(self.pixel_position[0]), round(self.pixel_position[1]))
+        self.move_time = pygame.time.get_ticks()
 
     def on_bomb_dropped(self):
         """ dop bomb """
