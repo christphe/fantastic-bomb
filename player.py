@@ -24,7 +24,7 @@ player_rects = [
     ]
 ]
 
-SPEED = 0.01
+SPEED = 0.003
 
 
 def init_events():
