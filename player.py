@@ -93,13 +93,13 @@ class Player:
             keys = pygame.key.get_pressed()
             if keys[pygame.K_UP]:
                 self.events[config.EVT_UP] = True
-            elif keys[pygame.K_DOWN]:
+            if keys[pygame.K_DOWN]:
                 self.events[config.EVT_DOWN] = True
-            elif keys[pygame.K_LEFT]:
+            if keys[pygame.K_LEFT]:
                 self.events[config.EVT_LEFT] = True
-            elif keys[pygame.K_RIGHT]:
+            if keys[pygame.K_RIGHT]:
                 self.events[config.EVT_RIGHT] = True
-            elif keys[pygame.K_SPACE]:
+            if keys[pygame.K_SPACE]:
                 self.events[config.EVT_BOMB] = True
 
     def move(self, current_stage):
@@ -129,10 +129,18 @@ class Player:
             if stage.get_tile(current_stage, destination) != " ":
                 destination = self.position
             time = pygame.time.get_ticks() - self.move_time
-            self.pixel_position = (self.pixel_position[0] + ((destination[0] - self.pixel_position[0]) * SPEED * time),
-                                    self.pixel_position[1] + ((destination[1] - self.pixel_position[1]) * SPEED * time))
+            dir_vec = pygame.Vector2()
+            dir_vec[:] = (float(destination[0] - self.pixel_position[0]),
+                          float(destination[1] - self.pixel_position[1]))
+            if dir_vec.length() > 0.01:
+                dir_vec = dir_vec.normalize()
+                scalar = SPEED * time
+                dir_vec *= scalar
+                self.pixel_position = (
+                    self.pixel_position[0] + dir_vec[0], self.pixel_position[1] + dir_vec[1])
 
-        self.position = (round(self.pixel_position[0]), round(self.pixel_position[1]))
+        self.position = (int(round(self.pixel_position[0])), int(
+            round(self.pixel_position[1])))
         self.move_time = pygame.time.get_ticks()
 
     def on_bomb_dropped(self):
